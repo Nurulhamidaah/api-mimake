@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class BarangR extends JsonResource
 {
     public $status;
-   public $message;
+    public $message;
 
     public function __construct($status, $message, $resource)
     {
@@ -18,10 +18,10 @@ class BarangR extends JsonResource
 
     public function toArray($request)
     {
-        return [
-            'success'   => $this->status,
-            'message'   => $this->message,
-            'data'      => $this->resource
+        return[
+            'success' => $this->status,
+            'message' => $this->message,
+            'data'    => $this->resource
         ];
     }
 }

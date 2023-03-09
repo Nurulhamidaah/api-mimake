@@ -13,71 +13,86 @@ class BarangC extends Controller
     public function index()
     {
         $barang = BarangM::latest()->paginate(5);
+
         return new BarangR(true, 'List Data Barang', $barang);
     }
+
     public function store(Request $request){
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all() , [
             'nama_barang'       => 'required',
             'gambar_barang'     => 'required|image|mimes:jpeg,png,jpg,gif,svg,webm',
-            'qty'     => 'required',
-            'harga'   => 'required',
-            'barcode'     => 'required',
+            'qty'               => 'required',
+            'harga'             => 'required',
+            'barcode'           => 'required'
+        ]); 
+
+        if ($validator->fails()){
+            return response()->json($validator->errors(), 422);
+        }
+
+        $gambar_barang = $request->file('gambar_barang');
+        $gambar_barang->storeAs('public/barang', $gambar_barang->hashName());
+
+        $barang = BarangM::create([
+            'nama_barang'           => $request->nama_barang,
+            'gambar_barang'         => $gambar_barang->hashname(),
+            'qty'                   => $request->qty,
+            'harga'                 => $request->harga,
+            'barcode'               => $request->barcode,
+        ]);
+
+        return new BarangR(true, 'Data Barang Berhasil Ditambahkan', $barang);
+    }
+
+    public function show(BarangM $barang){
+        return new BarangR(true, 'Data Barang Ditemukan', $barang);
+    }
+
+    public function update(Request $request, BarangM $barang){
+        $validator = Validator::make($request->all() , [
+            'nama_barang'       => 'required',
+            'qty'               => 'required',
+            'harga'             => 'required',
+            'barcode'           => 'required'
         ]);
 
         if ($validator->fails()){
             return response()->json($validator->errors(), 422);
         }
-        $image = $request->file('gambar_barang');
-        $image->storeAs('public/barang', $image->hashName());
-        $barang = BarangM::create([
-            'nama_barang'       => 'required',
-            'gambar_barang'     => $image->hashName(),
-            'qty'     => 'required',
-            'harga'   => 'required',
-            'barcode'     => 'required',
-        ]);
-        return new BarangR(true, 'Data Barang Berhasil Ditambahkan!', $barang);
-    }
-    public function show(BarangM $barang){
-        return new BarangR(true, 'Data Barang Ditemukan!', $barang);
-    }
-    public function update(Request $request, BarangM $barang){
-        $validator = Validator::make($request->all(), [
-            'nama_barang'       => 'required',
-            'qty'     => 'required',
-            'harga'   => 'required',
-            'barcode'     => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-        if ($request->hasFile('gambar_barang')) {
 
-            $image = $request->file('gambar_barang');
-            $image->storeAs('public/gambar', $image->hashName());
+        if ($request->hasFile('gambar_barang')){
+            
+            $gambar_barang = $request->file('gambar_barang');
+            $gambar_barang->storeAs('public/barang', $gambar_barang->hashName());
 
-            Storage::delete('public/gambar/'.$barang->image);
+            Storage::delete('public/barang/'.$barang->gambar_barang);
 
             $barang->update([
-            'nama_barang'       => 'required',
-            'gambar_barang'     => $image->hashName(),
-            'qty'     => 'required',
-            'harga'   => 'required',
-            'barcode'     => 'required',
+                'nama_barang'           => $request->nama_barang,
+                'gambar_barang'         => $gambar_barang->hashname(),
+                'qty'                   => $request->qty,
+                'harga'                 => $request->harga,
+                'barcode'               => $request->barcode,
             ]);
-        } else{
+
+        } else {
             $barang->update([
-            'nama_barang'       => 'required',
-            'qty'     => 'required',
-            'harga'   => 'required',
-            'barcode'     => 'required',
+                'nama_barang'           => $request->nama_barang,
+                'qty'                   => $request->qty,
+                'harga'                 => $request->harga,
+                'barcode'               => $request->barcode,
             ]);
         }
-        return new BarangR(true, 'Data Barang Diubah!', $barang);
+
+        return new BarangR(true, 'Data Barang Berhasil Diubah', $barang);
+
     }
-    public function destroy(BarangM $barang) {
-        Storage::delete('public/barang/'.$barang->image);
+
+    public function destroy(BarangM $barang){
+        Storage::delete('public/barang/'.$barang->gambar_barang);
+
         $barang->delete();
-        return new BarangR(true, 'Data Barang Berhasil Dihapus!', null);
+
+        return new BarangR(true, 'Data Barang Berhasil Dihapus', null);
     }
 }
